@@ -21,7 +21,7 @@ const Debate = () => {
   const handleStartDebate = () => {
     if (topic.trim() !== '') {
       setDebateStarted(true);
-      // You could also store the topic to sessionStorage if needed
+    
     } else {
       alert("Please enter a debate topic.");
     }
