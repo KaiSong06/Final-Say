@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from langchain.chat_models import init_chat_model
 from langchain_core.prompts import ChatPromptTemplate
 import google.generativeai as ChatGoogleGenerativeAI
+from langchain.schema import HumanMessage, AIMessage
 from google import genai
 import whisper
 from dotenv import load_dotenv
@@ -50,8 +51,37 @@ async def transcribe(file: UploadFile = File(...)):
     return {"transcription": result["text"]}
 
 @app.post("/response")
-def response(arg: str, topic: str):
+def response(arg: str, topic: str, context: str):
     """
     Return the AI generated response
     """
-    system_template = ""
+
+    #Get initial response
+    responsePrompt = """
+    You are an expert AI Debate Coach. Your task is to argue against the student’s position in a formal debate. Read the student's argument and craft a compelling, well-structured rebuttal. Use logical reasoning, evidence, and rhetorical skill to dismantle their claims and strengthen the opposing stance.
+
+    Student’s Resolution:
+    "{topic}"
+
+    Student’s Argument:
+    "{arg}"
+
+    Context:
+    "{context}"
+    Respond with your rebuttal only, as if you are their opponent in a competitive debate.
+    """
+    response = Gemini([HumanMessage(content=responsePrompt)])
+
+    #Check response
+    checkPrompt = """
+    You are an expert in detecting and correcting biases in language model outputs.
+    Read the following LLM-generated response and revise it to remove any potential bias — including cultural, political, gender, racial, or socioeconomic bias — that may result from the model’s training data.
+    Your goal is to produce a neutral, inclusive, and fact-based version of the response, without changing its intended meaning or usefulness.
+    Only return the corrected response. Do not include any commentary or explanation.
+
+    Original Response: {response}
+    """
+
+    checkedResponse = GPT([AIMessage(content=response)])
+
+    return checkedResponse
