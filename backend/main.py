@@ -1,7 +1,20 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from langchain.chat_models import init_chat_model
+from langchain_core.prompts import ChatPromptTemplate
+import google.generativeai as ChatGoogleGenerativeAI
+from google import genai
 import whisper
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+#Load models
+GPT = init_chat_model("gpt-4o-mini", model_provider="openai", api_key=OPENAI_API_KEY)
+Gemini = ChatGoogleGenerativeAI(model="gemini-2.5-Flash", api_key=GEMINI_API_KEY)
 
 app = FastAPI()
 
@@ -35,3 +48,10 @@ async def transcribe(file: UploadFile = File(...)):
     os.remove(temp_file_path)
 
     return {"transcription": result["text"]}
+
+@app.post("/response")
+def response(arg: str, topic: str):
+    """
+    Return the AI generated response
+    """
+    system_template = ""
