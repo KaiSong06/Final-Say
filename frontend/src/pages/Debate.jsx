@@ -79,6 +79,10 @@ const Debate = () => {
     }
   }
 
+  const handleRecord = async (e) => {
+    console.log("hi");
+  }
+
   return ( 
     <div className="debate">
       <div className="debate-header">
@@ -105,7 +109,7 @@ const Debate = () => {
                   key={index}
                   className={`chat-bubble ${entry.speaker === 'User' ? 'user' : 'ai'}`}
                 >
-                  <strong>{entry.speaker}:</strong> {entry.message}
+                 {entry.message}
                 </div>
               ))}
               <div ref={chatEndRef} />
@@ -119,16 +123,16 @@ const Debate = () => {
                 value={textMessage}
                 onChange={(e) => setTextMessage(e.target.value)}
                 />
-                <button className="record-button">
-                  <p>Use Mic</p>
+                <button className="record-button" onClick={handleSend}>
+                  <p>Send</p>
                 </button>
               </div>
               <div className="chat-buttons">
                 <button className="clear-button" onClick={handleClear}>
                   <p>Clear Chat</p>
                 </button>
-                <button className="send-button" onClick={handleSend}>
-                  <p>Send</p>
+                <button className="record-button" onClick={handleRecord}>
+                  <p>Use Mic</p>
                 </button>
                 <button className="feedback-button">
                   <p>Get Feedback</p>
