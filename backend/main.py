@@ -22,7 +22,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://final-say.onrender.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -70,7 +70,7 @@ def response(arg: str, topic: str, context: str):
 
         Context:
         "{context}"
-        Respond with your rebuttal only, as if you are their opponent in a competitive debate.
+        Respond with your rebuttal only, as if you are their opponent in a competitive debate. Limit your rebuttal to 150 words.
         """
         response_obj = Gemini([HumanMessage(content=responsePrompt)])
         response_text = response_obj[0].content if isinstance(response_obj, list) else response_obj.content
