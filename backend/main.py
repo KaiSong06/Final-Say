@@ -2,7 +2,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.chat_models import init_chat_model
 from langchain_core.prompts import ChatPromptTemplate
-import google.generativeai as ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage, AIMessage
 from google import genai
 import whisper
