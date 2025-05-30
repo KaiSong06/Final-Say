@@ -4,28 +4,80 @@ const Debate = () => {
   const [chatLog, setChatLog] = useState([]);
   const [debateStarted, setDebateStarted] = useState(false);
   const [topic, setTopic] = useState('');
+  const [textMessage, setTextMessage] = useState('');
   const chatEndRef = useRef(null);
+  const [count,setCount] = useState(0);
 
   useEffect(() => {
-    fetch('/chat.json')
-      .then((res) => res.json())
-      .then((data) => setChatLog(data));
-  }, []);
+  const fetchChatHistory = () => {
+    const allKeys = Object.keys(sessionStorage)
+      .filter(key => key.startsWith("User - "))
+      .sort((a, b) => {
+        const numA = parseInt(a.split("User - ")[1], 10);
+        const numB = parseInt(b.split("User - ")[1], 10);
+        return numA - numB;
+      });
 
-  useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chatLog]);
+    const messages = allKeys.map(key => ({
+      speaker: 'User',
+      message: sessionStorage.getItem(key)
+    }));
+
+    setChatLog(messages);
+  };
+
+  fetchChatHistory();
+}, []);
+
 
   const handleStartDebate = () => {
-    if (topic.trim() !== '') {
-      setDebateStarted(true);
+    try {
+      if (topic.trim() !== '') {
+        setDebateStarted(true);
+      } else {
+        alert("Please enter a debate topic.");
+      }
+    } catch (error) {
+      console.log(error);
+    };
     
-    } else {
-      alert("Please enter a debate topic.");
-    }
   };
+
+  const handleSend = async (e) => {
+  try {
+    if (textMessage.trim() !== '') {
+      const newKey = "User - " + count;
+      sessionStorage.setItem(newKey, textMessage);
+      setCount(count + 1);
+      setTextMessage('');
+
+      const updatedKeys = Object.keys(sessionStorage)
+        .filter(key => key.startsWith("User - "))
+        .sort((a, b) => parseInt(a.split("User - ")[1]) - parseInt(b.split("User - ")[1]));
+
+      const updatedMessages = updatedKeys.map(key => ({
+        speaker: 'User',
+        message: sessionStorage.getItem(key)
+      }));
+
+      setChatLog(updatedMessages);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+  };
+
+
+  const handleClear = async (e) => {
+    try{
+      sessionStorage.clear();
+      setChatLog([]);
+      setCount(0); 
+      setTextMessage('');
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   return ( 
     <div className="debate">
@@ -61,16 +113,21 @@ const Debate = () => {
 
             <div className="debate-chat-inputs">
               <div className="chat-input">
-                <input type="text" placeholder="Type your argument here..." />
+                <input 
+                type="text" 
+                placeholder="Type your argument here..." 
+                value={textMessage}
+                onChange={(e) => setTextMessage(e.target.value)}
+                />
                 <button className="record-button">
                   <p>Use Mic</p>
                 </button>
               </div>
               <div className="chat-buttons">
-                <button className="clear-button">
+                <button className="clear-button" onClick={handleClear}>
                   <p>Clear Chat</p>
                 </button>
-                <button className="send-button">
+                <button className="send-button" onClick={handleSend}>
                   <p>Send</p>
                 </button>
                 <button className="feedback-button">
