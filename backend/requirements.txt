@@ -6,3 +6,12 @@ google-generativeai
 python-dotenv
 openai
 whisper
+langchain-openai
+requests
+pydantic
+typing-extensions
+httpx
+tiktoken
+google-auth
+numpy
+torch
