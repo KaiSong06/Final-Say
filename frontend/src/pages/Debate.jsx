@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';  
+import axios from 'axios';
 
 const Debate = () => {
   const [chatLog, setChatLog] = useState([]);
@@ -8,15 +9,15 @@ const Debate = () => {
   const chatEndRef = useRef(null);
   const [count,setCount] = useState(0);
 
-  useEffect(() => {
+useEffect(() => {
   const fetchChatHistory = () => {
     const allKeys = Object.keys(sessionStorage)
-      .filter(key => key.startsWith(" - "))
+      .filter(key => key.includes(" - "))
       .map(key => {
-      const [speaker, numStr] = key.split(" - ");
-      const index = parseInt(numStr, 10);
-      const message = sessionStorage.getItem(key);
-      return { speaker, index, message };
+        const [speaker, numStr] = key.split(" - ");
+        const index = parseInt(numStr, 10);
+        const message = sessionStorage.getItem(key);
+        return { speaker, index, message };
       })
       .sort((a, b) => a.index - b.index);
 
@@ -25,6 +26,12 @@ const Debate = () => {
 
   fetchChatHistory();
 }, []);
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+    }, [chatLog]);
 
 
   const handleStartDebate = () => {
@@ -40,28 +47,41 @@ const Debate = () => {
     
   };
 
-  const handleSend = async (e) => {
-  try {
-    if (textMessage.trim() !== '') {
-      const newKey = "User - " + count;
-      sessionStorage.setItem(newKey, textMessage);
-      setCount(count + 1);
-      setTextMessage('');
+  const handleSend = async () => {
+    try {
+      if (textMessage.trim() === '') return;
 
-      const updatedKeys = Object.keys(sessionStorage)
-        .filter(key => key.startsWith("User - "))
-        .sort((a, b) => parseInt(a.split("User - ")[1]) - parseInt(b.split("User - ")[1]));
+      const userKey = `User - ${count}`;
+      sessionStorage.setItem(userKey, textMessage);
 
-      const updatedMessages = updatedKeys.map(key => ({
-        speaker: 'User',
-        message: sessionStorage.getItem(key)
-      }));
+      const updatedCount = count + 1;
+      setCount(updatedCount);
 
-      setChatLog(updatedMessages);
+      const currentMessages = [...chatLog, { speaker: 'User', message: textMessage }];
+      setChatLog(currentMessages);
+      setTextMessage(''); 
+
+
+      const contextString = currentMessages.map(entry => `${entry.speaker}: ${entry.message}`).join(' ');
+
+      const response = await axios.post('http://127.0.0.1:8000/response', null, {
+        params: {
+          arg: textMessage,
+          topic: topic,
+          context: contextString
+        }
+      });
+
+      const finalSayMessage = response.data; 
+      const finalSayKey = `FinalSay - ${updatedCount}`;
+      sessionStorage.setItem(finalSayKey, finalSayMessage);
+
+      setChatLog(prev => [...prev, { speaker: 'FinalSay', message: finalSayMessage }]);
+      setCount(prev => prev + 1);
+
+    } catch (error) {
+      console.error("Error during send:", error);
     }
-  } catch (error) {
-    console.log(error);
-  }
   };
 
 
