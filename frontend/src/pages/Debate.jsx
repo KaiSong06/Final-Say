@@ -11,19 +11,16 @@ const Debate = () => {
   useEffect(() => {
   const fetchChatHistory = () => {
     const allKeys = Object.keys(sessionStorage)
-      .filter(key => key.startsWith("User - "))
-      .sort((a, b) => {
-        const numA = parseInt(a.split("User - ")[1], 10);
-        const numB = parseInt(b.split("User - ")[1], 10);
-        return numA - numB;
-      });
+      .filter(key => key.startsWith(" - "))
+      .map(key => {
+      const [speaker, numStr] = key.split(" - ");
+      const index = parseInt(numStr, 10);
+      const message = sessionStorage.getItem(key);
+      return { speaker, index, message };
+      })
+      .sort((a, b) => a.index - b.index);
 
-    const messages = allKeys.map(key => ({
-      speaker: 'User',
-      message: sessionStorage.getItem(key)
-    }));
-
-    setChatLog(messages);
+    setChatLog(allKeys);
   };
 
   fetchChatHistory();
@@ -76,8 +73,16 @@ const Debate = () => {
       setTextMessage('');
     } catch (error) {
       console.log(error);
-    }
-  }
+    };
+  };
+
+  const handleFeedback = async (e) => {
+    try{
+      //API 
+    } catch (error) {
+      console.log(error);
+    };
+  };
 
   return ( 
     <div className="debate">
@@ -130,7 +135,7 @@ const Debate = () => {
                 <button className="send-button" onClick={handleSend}>
                   <p>Send</p>
                 </button>
-                <button className="feedback-button">
+                <button className="feedback-button" onClick={handleFeedback}>
                   <p>Get Feedback</p>
                 </button>
               </div>
