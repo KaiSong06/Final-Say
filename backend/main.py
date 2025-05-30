@@ -4,10 +4,11 @@ from langchain.chat_models import init_chat_model
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage, AIMessage
-from google import genai
 import whisper
 from dotenv import load_dotenv
 import os
+
+#uvicorn main:app --reload
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")

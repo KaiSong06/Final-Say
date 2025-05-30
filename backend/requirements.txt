@@ -1,7 +1,9 @@
 fastapi
 uvicorn[standard]
-python-dotenv
 langchain
 langchain-google-genai
-whisper
-google-generativeai
+python-dotenv
+git+https://github.com/openai/whisper.git
+python-multipart
+langchain-openai
+dotenv
