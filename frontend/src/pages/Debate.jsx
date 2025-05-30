@@ -71,16 +71,28 @@ useEffect(() => {
           context: contextString
         }
       });
+      if (response.data?.error) {
+        console.error("Response error:", response.data.error);
+        console.log(response.data.error);
+        return; 
+      }
 
-      const finalSayMessage = response.data; 
+
+      const finalSayMessage = response.data.response;
+      if (!finalSayMessage) {
+          console.error("FinalSay response missing");
+          return;
+        }
+
       const finalSayKey = `FinalSay - ${updatedCount}`;
       sessionStorage.setItem(finalSayKey, finalSayMessage);
 
       setChatLog(prev => [...prev, { speaker: 'FinalSay', message: finalSayMessage }]);
       setCount(prev => prev + 1);
-
+      fetchChatHistory();
     } catch (error) {
-      console.error("Error during send:", error);
+      console.error("Error during send:", error.message, error.response);
+
     }
   };
 
@@ -91,6 +103,7 @@ useEffect(() => {
       setChatLog([]);
       setCount(0); 
       setTextMessage('');
+      fetchChatHistory();
     } catch (error) {
       console.log(error);
     };
