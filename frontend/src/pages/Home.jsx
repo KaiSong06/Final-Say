@@ -2,9 +2,9 @@ const Home = () => {
   return ( 
     <div className = "home">
       <div className = "home-main">
-        <h1>Final Say</h1>
+        <h1>FinalSay</h1>
         <h2>Think Sharper. Speak Stronger.</h2>
-        <h2>Have the Final Say.</h2>
+        <h2>Have the FinalSay.</h2>
         <img src="/logo.png" alt="Final Say Logo" className="home-logo" />
       </div>
       <div className = "home-description">
