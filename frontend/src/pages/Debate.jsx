@@ -64,7 +64,7 @@ useEffect(() => {
 
       const contextString = currentMessages.map(entry => `${entry.speaker}: ${entry.message}`).join(' ');
 
-      const response = await axios.post('https://final-say.onrender.com/response', null, {
+      const response = await axios.post('http://127.0.0.1:8000/response', null, {
         params: {
           arg: textMessage,
           topic: topic,
@@ -180,6 +180,7 @@ useEffect(() => {
           </div>
         )}
       </div>
+      
     </div>
   );
 };

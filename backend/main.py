@@ -8,7 +8,7 @@ import whisper
 from dotenv import load_dotenv
 import os
 
-#uvicorn main:app --reload
+#-
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
