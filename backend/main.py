@@ -14,11 +14,9 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-#Load models
-vertexai.init(project="final-say-461704", location="us-central1")
+#Load model
 GPT = init_chat_model("gpt-4o-mini", model_provider="openai", api_key=OPENAI_API_KEY)
 
 
