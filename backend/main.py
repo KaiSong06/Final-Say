@@ -1,28 +1,32 @@
+'''
+uvicorn main:app --reload
+'''
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.chat_models import init_chat_model
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.schema import HumanMessage, AIMessage
+from fastapi.responses import StreamingResponse
+import asyncio
+from google import genai
+from google.genai import types
+import vertexai
 import whisper
 from dotenv import load_dotenv
 import os
-
-#uvicorn main:app --reload
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 #Load models
+vertexai.init(project="final-say-461704", location="us-central1")
 GPT = init_chat_model("gpt-4o-mini", model_provider="openai", api_key=OPENAI_API_KEY)
-Gemini = ChatGoogleGenerativeAI(model="gemini-2.0-flash-001", api_key=GEMINI_API_KEY)
+
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://final-say.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -52,44 +56,53 @@ async def transcribe(file: UploadFile = File(...)):
     return {"transcription": result["text"]}
 
 @app.post("/response")
-def response(arg: str, topic: str, context: str):
-    try:
-        """
-        Return the AI generated response
-        """
+async def response(arg: str, topic: str, context: str):
+    async def generate_stream():
+        try:
+            client = genai.Client(
+                vertexai=True,
+                project=os.getenv("PROJECT_ID"),
+                location="us-central1",
+            )
 
-        #Get initial response
-        responsePrompt = f"""
-        You are an expert AI Debate Coach. Your task is to argue against the student’s position in a formal debate. Read the student's argument and craft a compelling, well-structured rebuttal. Use logical reasoning, evidence, and rhetorical skill to dismantle their claims and strengthen the opposing stance.
+            MODEL_NAME = f"projects/{os.getenv("PROJECT_ID")}/locations/us-central1/tunedModels/{os.getenv("MODEL_ID")}"
+            
+            contents = [
+                types.Content(
+                    role="user",
+                    parts=[{
+                        "text": f"""
+                        You are an expert AI Debate Coach. Your task is to argue against the student's position in a formal debate.
 
-        Student’s Resolution:
-        "{topic}"
+                        Student's Resolution:
+                        "{topic}"
 
-        Student’s Argument:
-        "{arg}"
+                        Student's Argument:
+                        "{arg}"
 
-        Context:
-        "{context}"
-        Respond with your rebuttal only, as if you are their opponent in a competitive debate. Limit your rebuttal to 150 words.
-        """
-        response_obj = Gemini([HumanMessage(content=responsePrompt)])
-        response_text = response_obj[0].content if isinstance(response_obj, list) else response_obj.content
+                        Context:
+                        "{context}"
+                        """
+                    }]
+                )
+            ]
 
-        #Check response
-        checkPrompt = f"""
-        You are an expert in detecting and correcting biases in language model outputs.
-        Read the following LLM-generated response and revise it to remove any potential bias — including cultural, political, gender, racial, or socioeconomic bias — that may result from the model’s training data.
-        Your goal is to produce a neutral, inclusive, and fact-based version of the response, without changing its intended meaning or usefulness.
-        Only return the corrected response. Do not include any commentary or explanation.
+            # Stream the response
+            stream = client.models.generate_content_stream(
+                model=MODEL_NAME,
+                contents=contents
+            )
 
-        Original Response: {response_text}
-        """
+            for chunk in stream:
+                if chunk.text:
+                    yield f"data: {chunk.text}\n\n"
+                await asyncio.sleep(0.01)
+                
+        except Exception as e:
+            print(f"Server Error: {str(e)}")
+            yield f"data: Error: {str(e)}\n\n"
 
-        checked_response_obj = GPT([AIMessage(content=checkPrompt)])
-        final_response = checked_response_obj[0].content if isinstance(checked_response_obj, list) else checked_response_obj.content
-
-        print("Final Response" + final_response)
-        return {"response": final_response}
-    except Exception as e:
-        print("Error in /response:", str(e))
-        return {"error": str(e)}
+    return StreamingResponse(
+        generate_stream(),
+        media_type="text/event-stream"
+    )
